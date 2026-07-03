@@ -10,10 +10,10 @@ from email.mime.text import MIMEText
 TEMPLATE = """\
 <div style="background:#ffffff;">
 <div style="max-width:640px;margin:0 auto;
-            font-family:-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+            font-family:Georgia,'Times New Roman',Times,serif;
             color:#111111;line-height:1.6;">
   <style>
-    h1, h2 {{ font-family: Georgia, 'Times New Roman', serif; font-weight: bold; }}
+    h1, h2 {{ font-weight: bold; }}
     a {{ color: #111111; }}
     .header {{
       background-color: #131313;
