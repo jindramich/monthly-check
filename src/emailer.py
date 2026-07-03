@@ -8,30 +8,35 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 
 TEMPLATE = """\
-<div style="background:#ffffff;padding:32px 12px;">
+<div style="background:#ffffff;">
 <div style="max-width:640px;margin:0 auto;
             font-family:-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
             color:#111111;line-height:1.6;">
   <style>
-    h1, h2 {{ font-family: Georgia, 'Times New Roman', serif; font-weight: normal; }}
+    h1, h2 {{ font-family: Georgia, 'Times New Roman', serif; font-weight: bold; }}
     a {{ color: #111111; }}
     .header {{
-      border-bottom: 3px solid #111111;
-      padding-bottom: 14px;
+      background-color: #131313;
+      background-image: radial-gradient(rgba(255,255,255,0.05) 18%, transparent 19%);
+      background-size: 34px 34px;
+      padding: 40px 32px 34px;
       margin-bottom: 8px;
     }}
     .header h1 {{
       margin: 0;
-      font-size: 26px;
-      letter-spacing: 0.5px;
+      font-size: 34px;
+      line-height: 1.15;
+      letter-spacing: 0.2px;
+      color: #f5f4ef;
     }}
     .header .sub {{
-      margin: 6px 0 0;
+      margin: 10px 0 0;
       font-size: 12px;
-      letter-spacing: 1px;
+      letter-spacing: 1.5px;
       text-transform: uppercase;
-      color: #666666;
+      color: #9a9a9a;
     }}
+    .content {{ padding: 22px 32px 32px; }}
     .overview {{
       border-bottom: 1px solid #cccccc;
       padding: 18px 0 22px;
@@ -45,7 +50,7 @@ TEMPLATE = """\
     }}
     .stock h2 {{
       margin: 0 0 14px;
-      font-size: 20px;
+      font-size: 21px;
     }}
     table.fundamentals {{
       border-collapse: collapse;
@@ -77,13 +82,14 @@ TEMPLATE = """\
     p.yf-link {{ margin: 0; }}
     p.yf-link a {{
       display: inline-block;
-      border: 1px solid #111111;
-      color: #111111 !important;
+      background-color: #131313;
+      border-radius: 999px;
+      color: #f5f4ef !important;
       text-decoration: none;
       font-size: 12px;
       letter-spacing: 0.5px;
       text-transform: uppercase;
-      padding: 7px 14px;
+      padding: 9px 18px;
     }}
     .footer {{
       font-size: 11px;
@@ -95,10 +101,12 @@ TEMPLATE = """\
     <h1>Watchlist Monthly</h1>
     <p class="sub">{month} &middot; Monthly Check watchlist</p>
   </div>
-  {body}
-  <p class="footer">
-    Generated automatically from your Yahoo Finance watchlist ({symbols}).
-  </p>
+  <div class="content">
+    {body}
+    <p class="footer">
+      Generated automatically from your Yahoo Finance watchlist ({symbols}).
+    </p>
+  </div>
 </div>
 </div>
 """
