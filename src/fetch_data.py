@@ -71,6 +71,7 @@ def fetch_ticker_data(symbol: str) -> dict:
             "market_cap": info.get("marketCap"),
             "trailing_pe": info.get("trailingPE"),
             "forward_pe": info.get("forwardPE"),
+            "peg_ratio": info.get("trailingPegRatio") or info.get("pegRatio"),
             "dividend_yield": info.get("dividendYield"),
             "fifty_two_week_high": info.get("fiftyTwoWeekHigh"),
             "fifty_two_week_low": info.get("fiftyTwoWeekLow"),
@@ -88,6 +89,7 @@ def fetch_ticker_data(symbol: str) -> dict:
 
     return {
         "symbol": symbol,
+        "yahoo_finance_url": f"https://finance.yahoo.com/quote/{symbol}",
         "fundamentals": fundamentals,
         "month_change_pct": month_change_pct,
         "news": news,
