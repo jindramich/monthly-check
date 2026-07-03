@@ -15,12 +15,6 @@ Once a month a GitHub Action:
    month — with links to the key articles, in watchlist order.
 4. **Emails** the newsletter to your inbox via Gmail.
 
-> **Currently capped to the first 3 tickers** in the watchlist
-> (`YAHOO_WATCHLIST_LIMIT: "3"` in the workflow file) to make it easier to
-> validate end to end. Remove that line in
-> `.github/workflows/monthly-newsletter.yml` once you're happy with the
-> output, to cover the full watchlist.
-
 ## Setup
 
 Add these repository secrets (GitHub → Settings → Secrets and variables →
@@ -66,9 +60,19 @@ can break if Yahoo changes their site.
 
 ## Running
 
-- **Scheduled:** runs automatically on the 1st of every month at 06:30 UTC.
+- **Scheduled:** runs automatically on the first Friday of every month at
+  10:00 Europe/Prague time (09:00 UTC), regardless of whether you open GitHub
+  that day — this is a real cron trigger on GitHub's servers, not something
+  that depends on you being active. Standard cron can't express "first Friday
+  of the month" directly, so the workflow fires every Friday and the first
+  step checks the date: if it's not within the 1st-7th of the month (i.e. not
+  the first Friday), it skips the rest of the run. Note that 09:00 UTC is
+  exactly 10:00 during CET (winter); during CEST (summer, roughly late March
+  to late October) it lands at 11:00 local time instead, since GitHub Actions
+  cron has no timezone/DST awareness.
 - **Manually:** GitHub → Actions → *Monthly watchlist newsletter* → Run workflow.
-  Do this once after setup to verify everything works end to end.
+  This always runs regardless of the date (the first-Friday check only
+  applies to the scheduled trigger).
 
 ## Local run
 

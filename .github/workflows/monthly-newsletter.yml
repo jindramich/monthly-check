@@ -2,8 +2,13 @@ name: Monthly watchlist newsletter
 
 on:
   schedule:
-    # 1st of every month, 06:30 UTC
-    - cron: "30 6 1 * *"
+    # Every Friday at 09:00 UTC = 10:00 in Europe/Prague during CET (winter).
+    # During CEST (summer, roughly late Mar - late Oct) this lands at 11:00
+    # local time instead of 10:00 -- standard cron has no timezone/DST
+    # awareness, so a single UTC time can't be exactly right year-round.
+    # Only the first Friday of the month actually sends (see the gating
+    # step below); the other Fridays' triggers exit immediately.
+    - cron: "0 9 * * 5"
   workflow_dispatch: {}
 
 jobs:
@@ -11,25 +16,41 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
+      - name: Only proceed on the first Friday of the month
+        id: gate
+        run: |
+          if [ "${{ github.event_name }}" != "schedule" ]; then
+            echo "run=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          day_of_month=$(date -u +%d)
+          if [ "$day_of_month" -le 7 ]; then
+            echo "run=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "run=false" >> "$GITHUB_OUTPUT"
+            echo "Day $day_of_month is not within the first 7 days of the month -- this Friday isn't the first Friday, skipping."
+          fi
+
       - uses: actions/checkout@v4
+        if: steps.gate.outputs.run == 'true'
 
       - uses: actions/setup-python@v5
+        if: steps.gate.outputs.run == 'true'
         with:
           python-version: "3.12"
           cache: pip
 
       - name: Install dependencies
+        if: steps.gate.outputs.run == 'true'
         run: |
           pip install -r requirements.txt
           playwright install --with-deps chromium
 
       - name: Build and send newsletter
+        if: steps.gate.outputs.run == 'true'
         env:
           YAHOO_COOKIES: ${{ secrets.YAHOO_COOKIES }}
           YAHOO_WATCHLIST_NAME: ${{ secrets.YAHOO_WATCHLIST_NAME }}
-          # Temporary cap while testing -- covers only the first 3 tickers
-          # (in watchlist order). Remove this line to cover the full watchlist.
-          YAHOO_WATCHLIST_LIMIT: "3"
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           GMAIL_ADDRESS: ${{ secrets.GMAIL_ADDRESS }}
           GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
@@ -37,7 +58,7 @@ jobs:
         run: python -m src.main
 
       - name: Upload debug screenshot
-        if: failure()
+        if: failure() && steps.gate.outputs.run == 'true'
         uses: actions/upload-artifact@v4
         with:
           name: yahoo-debug-screenshot
