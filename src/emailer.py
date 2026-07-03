@@ -9,6 +9,10 @@ from email.mime.text import MIMEText
 
 TEMPLATE = """\
 <div style="max-width:680px;margin:0 auto;font-family:Georgia,serif;color:#222;line-height:1.5;">
+  <style>
+    table {{ border-collapse: collapse; margin: 12px 0; }}
+    td, th {{ border: 1px solid #ccc; padding: 4px 10px; text-align: left; }}
+  </style>
   <h1 style="border-bottom:2px solid #222;padding-bottom:8px;">Watchlist Monthly &mdash; {month}</h1>
   {body}
   <p style="margin-top:32px;font-size:12px;color:#888;border-top:1px solid #ddd;padding-top:8px;">
