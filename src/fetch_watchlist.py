@@ -36,6 +36,17 @@ def _parse_cookie_header(header: str) -> list[dict]:
     return cookies
 
 
+def _goto(page, url: str) -> None:
+    # Yahoo Finance never reaches "networkidle" (continuous background
+    # polling for quotes/ads/analytics), so wait only for the DOM, then
+    # give the page a bit of extra time to hydrate its client-side content.
+    page.goto(url, wait_until="domcontentloaded", timeout=60_000)
+    try:
+        page.wait_for_selector('a[href*="/quote/"], a[href*="/portfolio/"]', timeout=15_000)
+    except Exception:
+        pass  # fall through; caller decides if the resulting page has useful links
+
+
 def _extract_symbols(page) -> list[str]:
     symbols = []
     for href in page.eval_on_selector_all(
@@ -62,7 +73,7 @@ def fetch_watchlist_symbols() -> list[str]:
         )
         context.add_cookies(_parse_cookie_header(cookie_header))
         page = context.new_page()
-        page.goto(PORTFOLIOS_URL, wait_until="networkidle", timeout=60_000)
+        _goto(page, PORTFOLIOS_URL)
 
         if "login.yahoo.com" in page.url or page.query_selector('a[href*="login.yahoo.com"]'):
             browser.close()
@@ -85,7 +96,7 @@ def fetch_watchlist_symbols() -> list[str]:
         if portfolio_links:
             for link in sorted(portfolio_links):
                 url = link if link.startswith("http") else f"https://finance.yahoo.com{link}"
-                page.goto(url, wait_until="networkidle", timeout=60_000)
+                _goto(page, url)
                 symbols.extend(_extract_symbols(page))
         else:
             # Fallback: some layouts render holdings directly on /portfolios
