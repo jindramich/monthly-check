@@ -26,6 +26,7 @@ jobs:
       - name: Build and send newsletter
         env:
           YAHOO_COOKIES: ${{ secrets.YAHOO_COOKIES }}
+          YAHOO_WATCHLIST_NAME: ${{ secrets.YAHOO_WATCHLIST_NAME }}
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           GMAIL_ADDRESS: ${{ secrets.GMAIL_ADDRESS }}
           GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}

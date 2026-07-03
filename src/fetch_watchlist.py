@@ -17,6 +17,10 @@ QUOTE_RE = re.compile(r"/quote/([A-Za-z0-9^.\-=]+)")
 # Non-ticker slugs that can appear in /quote/ links (nav, promos)
 IGNORED_SYMBOLS = {"quote"}
 
+# Only pull tickers from the one Yahoo watchlist with this name (case-insensitive).
+# Override with the YAHOO_WATCHLIST_NAME env var if your watchlist is named differently.
+DEFAULT_WATCHLIST_NAME = "monthly check"
+
 
 def _parse_cookie_header(header: str) -> list[dict]:
     cookies = []
@@ -45,6 +49,32 @@ def _goto(page, url: str) -> None:
         page.wait_for_selector('a[href*="/quote/"], a[href*="/portfolio/"]', timeout=15_000)
     except Exception:
         pass  # fall through; caller decides if the resulting page has useful links
+
+
+def _is_logged_in(page) -> bool:
+    # Yahoo doesn't always redirect an unauthenticated request to
+    # login.yahoo.com -- it can just serve the logged-out page with a
+    # "Sign in" prompt and HTTP 200. That's the more reliable signal.
+    return page.query_selector('a:has-text("Sign in"), button:has-text("Sign in")') is None
+
+
+def _find_watchlist_link(page, watchlist_name: str) -> str | None:
+    entries = page.eval_on_selector_all(
+        'a[href*="/portfolio/"]',
+        "els => els.map(e => ({href: e.getAttribute('href'), "
+        "text: (e.textContent || '').trim()}))",
+    )
+    target = watchlist_name.strip().lower()
+
+    # Exact name match first, then fall back to a substring match in case
+    # Yahoo renders extra text (e.g. a share count) alongside the name.
+    for entry in entries:
+        if (entry.get("text") or "").strip().lower() == target:
+            return entry.get("href")
+    for entry in entries:
+        if target in (entry.get("text") or "").strip().lower():
+            return entry.get("href")
+    return None
 
 
 def _extract_symbols(page) -> list[str]:
@@ -88,8 +118,8 @@ def fetch_watchlist_symbols() -> list[str]:
         page = context.new_page()
         _goto(page, PORTFOLIOS_URL)
 
-        if "login.yahoo.com" in page.url:
-            print(f"[debug] redirected away from portfolios. Final URL: {page.url}")
+        if "login.yahoo.com" in page.url or not _is_logged_in(page):
+            print(f"[debug] not logged in. Final URL: {page.url}")
             print(f"[debug] page title: {page.title()!r}")
             debug_path = "yahoo_debug.png"
             try:
@@ -99,32 +129,31 @@ def fetch_watchlist_symbols() -> list[str]:
                 print(f"[debug] screenshot failed: {exc}")
             browser.close()
             sys.exit(
-                "Yahoo did not accept the session cookies (redirected to login). "
-                "This can happen even with valid cookies if Yahoo's bot detection "
-                "flags the automated browser/IP. Refresh the YAHOO_COOKIES secret "
-                "with a fresh Cookie header, and check the yahoo_debug.png artifact "
-                "if this keeps happening."
+                "Yahoo is treating this session as logged out (either redirected "
+                "to login, or served a page with a 'Sign in' prompt). This can "
+                "happen even with a Cookie header copied from a real browser if "
+                "you weren't actually signed in at the time, the cookies expired, "
+                "or Yahoo's bot detection flagged the request. Log into Yahoo "
+                "Finance, confirm you see your account avatar/name (not a 'Sign "
+                "in' button) before copying the Cookie header, and refresh the "
+                "YAHOO_COOKIES secret. Check the yahoo_debug.png artifact if this "
+                "keeps happening."
             )
 
-        # Collect links to individual portfolios/watchlists, then visit each
-        # and pull the ticker symbols out of the holdings table.
-        portfolio_links = {
-            href
-            for href in page.eval_on_selector_all(
-                'a[href*="/portfolio/"]', "els => els.map(e => e.getAttribute('href'))"
+        watchlist_name = os.environ.get("YAHOO_WATCHLIST_NAME") or DEFAULT_WATCHLIST_NAME
+        link = _find_watchlist_link(page, watchlist_name)
+        if not link:
+            browser.close()
+            sys.exit(
+                f'No watchlist named "{watchlist_name}" was found on your Yahoo '
+                "portfolios page. Create a watchlist with that exact name in Yahoo "
+                "Finance, or set the YAHOO_WATCHLIST_NAME secret to match the name "
+                "you're using."
             )
-            if href and "/portfolio/" in href
-        }
 
-        symbols: list[str] = []
-        if portfolio_links:
-            for link in sorted(portfolio_links):
-                url = link if link.startswith("http") else f"https://finance.yahoo.com{link}"
-                _goto(page, url)
-                symbols.extend(_extract_symbols(page))
-        else:
-            # Fallback: some layouts render holdings directly on /portfolios
-            symbols.extend(_extract_symbols(page))
+        url = link if link.startswith("http") else f"https://finance.yahoo.com{link}"
+        _goto(page, url)
+        symbols = _extract_symbols(page)
 
         browser.close()
 
