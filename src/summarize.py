@@ -4,7 +4,7 @@ import json
 
 import anthropic
 
-MODEL = "claude-opus-4-8"
+MODEL = "claude-sonnet-5"
 
 SYSTEM_PROMPT = """\
 You are writing a monthly stock watchlist newsletter for a private investor
