@@ -68,7 +68,8 @@ TEMPLATE = """\
       width: 45%;
     }}
     table.fundamentals td:last-child {{ text-align: right; }}
-    .positive, .negative {{ font-weight: 700; color: #111111; }}
+    .positive {{ font-weight: 700; color: #146c2e; }}
+    .negative {{ font-weight: 700; color: #b3261e; }}
     .stock p {{ font-size: 15px; margin: 0 0 14px; }}
     ul.sources {{
       list-style: none;
@@ -82,6 +83,7 @@ TEMPLATE = """\
     p.yf-link {{ margin: 0; }}
     p.yf-link a {{
       display: inline-block;
+      font-family: -apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
       background-color: #131313;
       border-radius: 999px;
       color: #f5f4ef !important;
