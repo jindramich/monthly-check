@@ -31,3 +31,12 @@ jobs:
           GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
           MAIL_TO: ${{ secrets.MAIL_TO }}
         run: python -m src.main
+
+      - name: Upload debug screenshot
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: yahoo-debug-screenshot
+          path: yahoo_debug.png
+          if-no-files-found: ignore
+          retention-days: 5
