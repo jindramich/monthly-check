@@ -51,6 +51,13 @@ def _goto(page, url: str) -> None:
         pass  # fall through; caller decides if the resulting page has useful links
 
 
+def _is_logged_in(page) -> bool:
+    # Yahoo doesn't always redirect an unauthenticated request to
+    # login.yahoo.com -- it can just serve the logged-out page with a
+    # "Sign in" prompt and HTTP 200. That's the more reliable signal.
+    return page.query_selector('a:has-text("Sign in"), button:has-text("Sign in")') is None
+
+
 def _find_watchlist_link(page, watchlist_name: str) -> str | None:
     entries = page.eval_on_selector_all(
         'a[href*="/portfolio/"]',
@@ -111,8 +118,8 @@ def fetch_watchlist_symbols() -> list[str]:
         page = context.new_page()
         _goto(page, PORTFOLIOS_URL)
 
-        if "login.yahoo.com" in page.url:
-            print(f"[debug] redirected away from portfolios. Final URL: {page.url}")
+        if "login.yahoo.com" in page.url or not _is_logged_in(page):
+            print(f"[debug] not logged in. Final URL: {page.url}")
             print(f"[debug] page title: {page.title()!r}")
             debug_path = "yahoo_debug.png"
             try:
@@ -122,11 +129,15 @@ def fetch_watchlist_symbols() -> list[str]:
                 print(f"[debug] screenshot failed: {exc}")
             browser.close()
             sys.exit(
-                "Yahoo did not accept the session cookies (redirected to login). "
-                "This can happen even with valid cookies if Yahoo's bot detection "
-                "flags the automated browser/IP. Refresh the YAHOO_COOKIES secret "
-                "with a fresh Cookie header, and check the yahoo_debug.png artifact "
-                "if this keeps happening."
+                "Yahoo is treating this session as logged out (either redirected "
+                "to login, or served a page with a 'Sign in' prompt). This can "
+                "happen even with a Cookie header copied from a real browser if "
+                "you weren't actually signed in at the time, the cookies expired, "
+                "or Yahoo's bot detection flagged the request. Log into Yahoo "
+                "Finance, confirm you see your account avatar/name (not a 'Sign "
+                "in' button) before copying the Cookie header, and refresh the "
+                "YAHOO_COOKIES secret. Check the yahoo_debug.png artifact if this "
+                "keeps happening."
             )
 
         watchlist_name = os.environ.get("YAHOO_WATCHLIST_NAME") or DEFAULT_WATCHLIST_NAME
