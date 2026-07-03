@@ -8,42 +8,44 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 
 TEMPLATE = """\
-<div style="background:#f2f1ec;padding:24px 12px;">
-<div style="max-width:680px;margin:0 auto;background:#ffffff;border:1px solid #e3e1d8;
-            border-radius:10px;overflow:hidden;
+<div style="background:#ffffff;padding:32px 12px;">
+<div style="max-width:640px;margin:0 auto;
             font-family:-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
-            color:#22242b;line-height:1.6;">
+            color:#111111;line-height:1.6;">
   <style>
-    h1, h2 {{ font-family: Georgia, 'Times New Roman', serif; }}
-    a {{ color: #0f5f8c; }}
+    h1, h2 {{ font-family: Georgia, 'Times New Roman', serif; font-weight: normal; }}
+    a {{ color: #111111; }}
     .header {{
-      background: linear-gradient(135deg, #12324f, #0f5f8c);
-      color: #ffffff;
-      padding: 28px 32px;
+      border-bottom: 3px solid #111111;
+      padding-bottom: 14px;
+      margin-bottom: 8px;
     }}
-    .header h1 {{ margin: 0; font-size: 24px; }}
-    .header .sub {{ margin: 6px 0 0; font-size: 13px; color: #cfe3ef; }}
-    .content {{ padding: 8px 32px 32px; }}
+    .header h1 {{
+      margin: 0;
+      font-size: 26px;
+      letter-spacing: 0.5px;
+    }}
+    .header .sub {{
+      margin: 6px 0 0;
+      font-size: 12px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: #666666;
+    }}
     .overview {{
-      background: #f5f8fa;
-      border-left: 4px solid #0f5f8c;
-      padding: 14px 18px;
-      margin: 20px 0 28px;
+      border-bottom: 1px solid #cccccc;
+      padding: 18px 0 22px;
+      margin-bottom: 4px;
       font-size: 15px;
     }}
     .overview p {{ margin: 0; }}
     .stock {{
-      border: 1px solid #e3e1d8;
-      border-radius: 8px;
-      padding: 20px 24px 22px;
-      margin-bottom: 24px;
-      background: #fffefb;
+      border-bottom: 1px solid #cccccc;
+      padding: 26px 0;
     }}
     .stock h2 {{
-      margin: 0 0 12px;
-      font-size: 19px;
-      border-bottom: 2px solid #eae7da;
-      padding-bottom: 8px;
+      margin: 0 0 14px;
+      font-size: 20px;
     }}
     table.fundamentals {{
       border-collapse: collapse;
@@ -51,59 +53,52 @@ TEMPLATE = """\
       margin: 4px 0 18px;
       font-size: 14px;
     }}
-    table.fundamentals tr:nth-child(even) {{ background: #f7f6f1; }}
     table.fundamentals td, table.fundamentals th {{
-      border: 1px solid #eae7da;
-      padding: 6px 12px;
+      border-bottom: 1px solid #e5e5e5;
+      padding: 6px 4px;
       text-align: left;
     }}
     table.fundamentals td:first-child, table.fundamentals th:first-child {{
-      color: #555;
+      color: #555555;
       width: 45%;
     }}
-    .positive {{ color: #146c2e; font-weight: 600; }}
-    .negative {{ color: #b3261e; font-weight: 600; }}
+    table.fundamentals td:last-child {{ text-align: right; }}
+    .positive, .negative {{ font-weight: 700; color: #111111; }}
     .stock p {{ font-size: 15px; margin: 0 0 14px; }}
     ul.sources {{
       list-style: none;
       margin: 0 0 16px;
       padding: 0;
-      font-size: 13px;
-      color: #666;
+      font-size: 12px;
+      color: #666666;
     }}
-    ul.sources li {{
-      padding: 4px 0;
-      border-top: 1px solid #f0efe8;
-    }}
+    ul.sources li {{ padding: 3px 0; }}
+    ul.sources li:before {{ content: "\\2014  "; }}
     p.yf-link {{ margin: 0; }}
     p.yf-link a {{
       display: inline-block;
-      background: #0f5f8c;
-      color: #ffffff !important;
+      border: 1px solid #111111;
+      color: #111111 !important;
       text-decoration: none;
-      font-size: 13px;
-      font-weight: 600;
-      padding: 8px 16px;
-      border-radius: 20px;
+      font-size: 12px;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      padding: 7px 14px;
     }}
     .footer {{
-      font-size: 12px;
-      color: #888;
-      border-top: 1px solid #eae7da;
-      padding-top: 14px;
-      margin-top: 8px;
+      font-size: 11px;
+      color: #999999;
+      padding-top: 18px;
     }}
   </style>
   <div class="header">
     <h1>Watchlist Monthly</h1>
     <p class="sub">{month} &middot; Monthly Check watchlist</p>
   </div>
-  <div class="content">
-    {body}
-    <p class="footer">
-      Generated automatically from your Yahoo Finance watchlist ({symbols}).
-    </p>
-  </div>
+  {body}
+  <p class="footer">
+    Generated automatically from your Yahoo Finance watchlist ({symbols}).
+  </p>
 </div>
 </div>
 """

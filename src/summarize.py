@@ -38,30 +38,41 @@ this exact structure, in this order:
    Use "N/A" for any field that's missing or null in the data — never invent
    a number.
 
-3. **News overview** — 3-5 paragraphs of flowing prose (NOT a bulleted list)
-   that go genuinely deep on this stock's past month, not a shallow recap.
-   Cover, to the extent the news supports it:
-   - What specifically happened (earnings results vs. estimates, guidance
-     changes, analyst upgrades/downgrades with old/new price targets,
-     product launches, deals, litigation, management changes, macro/sector
-     events that touched this name).
+3. **News overview** — thorough flowing prose (NOT a bulleted list) that goes
+   genuinely deep on this stock's past month — treat every distinct news item
+   in the data as worth a mention, not just the single dominant narrative.
+   Don't compress multiple separate developments into one vague sentence;
+   walk through each one. Cover, to the extent the news supports it:
+   - Every specific thing that happened, individually: earnings results vs.
+     estimates, guidance changes, each analyst action with the analyst/firm
+     name and old/new rating or price target, insider buying/selling with
+     dollar amounts, product or partnership announcements (name the products,
+     partners, and deals), litigation, management changes, shareholder
+     meeting outcomes, macro/sector events that touched this name — anything
+     present in the news data.
    - Why it plausibly moved the price the way it did this month — connect
      the news explicitly to the 1-month % change rather than just listing
      events next to it.
    - Valuation context: given the P/E, PEG, and dividend yield above, does
      the move look justified by fundamentals, or like sentiment/momentum
-     running ahead of (or behind) the numbers? Say so explicitly.
+     running ahead of (or behind) the numbers? Say so explicitly, and
+     mention analyst price targets vs. the current price if the data
+     includes them.
    - Notable sentiment shifts over the month, if the news supports it (e.g.
      analysts turning more cautious/bullish, changing narrative) — don't
      force this if there's nothing there.
    - What to watch next month: an upcoming earnings date if inferable from
      the data, pending catalysts, or open questions the news raised.
-   Use specific figures from the news (revenue numbers, percentages, dollar
-   amounts, dates) instead of vague language like "strong results" or "mixed
-   news." Every claim should trace back to something in the provided data —
-   if the news doesn't support a claim, don't make it. If there was no
-   meaningful news this month, say so plainly in one sentence rather than
-   padding with generic commentary.
+   Use specific figures and named entities from the news (company and
+   analyst/firm names, revenue numbers, percentages, dollar amounts, exact
+   dates) instead of vague language like "strong results" or "mixed news."
+   Every claim should trace back to something in the provided data — if the
+   news doesn't support a claim, don't make it. Length should follow from
+   how much the news actually supports, not a fixed target — a ticker with
+   many distinct developments should get a longer, more thorough writeup
+   than one with little news. If there was no meaningful news this month,
+   say so plainly in one sentence rather than padding with generic
+   commentary.
 
 4. **Sources** — a <ul class="sources"> below the news overview, linking to
    the specific articles the overview above actually drew from:
