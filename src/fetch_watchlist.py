@@ -64,22 +64,46 @@ def fetch_watchlist_symbols() -> list[str]:
         sys.exit("YAHOO_COOKIES is not set. See README for how to provide it.")
 
     with sync_playwright() as p:
-        browser = p.chromium.launch()
+        browser = p.chromium.launch(
+            # Reduce headless/automation fingerprint signals that trigger
+            # bot-detection challenges even with valid session cookies.
+            args=[
+                "--disable-blink-features=AutomationControlled",
+                "--disable-dev-shm-usage",
+            ],
+        )
         context = browser.new_context(
             user_agent=(
                 "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
                 "(KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
-            )
+            ),
+            viewport={"width": 1366, "height": 900},
+            locale="en-US",
+            extra_http_headers={"Accept-Language": "en-US,en;q=0.9"},
+        )
+        context.add_init_script(
+            "Object.defineProperty(navigator, 'webdriver', {get: () => undefined});"
         )
         context.add_cookies(_parse_cookie_header(cookie_header))
         page = context.new_page()
         _goto(page, PORTFOLIOS_URL)
 
-        if "login.yahoo.com" in page.url or page.query_selector('a[href*="login.yahoo.com"]'):
+        if "login.yahoo.com" in page.url:
+            print(f"[debug] redirected away from portfolios. Final URL: {page.url}")
+            print(f"[debug] page title: {page.title()!r}")
+            debug_path = "yahoo_debug.png"
+            try:
+                page.screenshot(path=debug_path, full_page=True)
+                print(f"[debug] saved screenshot to {debug_path}")
+            except Exception as exc:  # noqa: BLE001
+                print(f"[debug] screenshot failed: {exc}")
             browser.close()
             sys.exit(
                 "Yahoo did not accept the session cookies (redirected to login). "
-                "Refresh the YAHOO_COOKIES secret with a fresh Cookie header."
+                "This can happen even with valid cookies if Yahoo's bot detection "
+                "flags the automated browser/IP. Refresh the YAHOO_COOKIES secret "
+                "with a fresh Cookie header, and check the yahoo_debug.png artifact "
+                "if this keeps happening."
             )
 
         # Collect links to individual portfolios/watchlists, then visit each
