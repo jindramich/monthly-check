@@ -5,13 +5,21 @@ Monthly fundamentals check with relevant news, sent straight to email.
 Once a month a GitHub Action:
 
 1. Logs into **Yahoo Finance** with your session cookies and reads the tickers
-   from a single watchlist named **"monthly check"** (headless browser —
-   Yahoo has no official watchlist API).
+   from a single watchlist named **"monthly check"**, in the same order they
+   appear there (headless browser — Yahoo has no official watchlist API).
 2. Pulls each ticker's **fundamentals** (price, P/E, market cap, dividend
-   yield, 1-month price change) and the **past month's news** via yfinance.
-3. Has **Claude** write a digest: what actually mattered per stock, biggest
-   movers first, with links to the key articles.
+   yield, 52-week range, 1-month price change) and the **past month's news**
+   via yfinance.
+3. Has **Claude** write an in-depth digest per stock: what happened, why it
+   plausibly moved the price, valuation context, and what to watch next
+   month — with links to the key articles, in watchlist order.
 4. **Emails** the newsletter to your inbox via Gmail.
+
+> **Currently capped to the first 3 tickers** in the watchlist
+> (`YAHOO_WATCHLIST_LIMIT: "3"` in the workflow file) to make it easier to
+> validate end to end. Remove that line in
+> `.github/workflows/monthly-newsletter.yml` once you're happy with the
+> output, to cover the full watchlist.
 
 ## Setup
 
