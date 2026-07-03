@@ -1,5 +1,6 @@
 """Send the newsletter via Gmail SMTP (app password)."""
 
+import logging
 import os
 import smtplib
 import sys
@@ -7,12 +8,30 @@ from datetime import date
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 
+import cssutils
+from premailer import transform
+
+# cssutils (used internally by premailer) validates against CSS 2.1 and logs
+# noisy warnings for modern properties we intentionally use (radial-gradient,
+# background-size) -- they still get inlined correctly, so silence the log.
+cssutils.log.setLevel(logging.CRITICAL)
+
 TEMPLATE = """\
-<div style="background:#ffffff;">
-<div style="max-width:640px;margin:0 auto;
-            font-family:Georgia,'Times New Roman',Times,serif;
-            color:#111111;line-height:1.6;">
-  <style>
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Watchlist Monthly</title>
+<style>
+    body {{
+      margin: 0;
+      padding: 0;
+      background: #ffffff;
+      font-family: Georgia, 'Times New Roman', Times, serif;
+      color: #111111;
+      line-height: 1.6;
+    }}
     h1, h2 {{ font-weight: bold; }}
     a {{ color: #111111; }}
     .header {{
@@ -98,7 +117,10 @@ TEMPLATE = """\
       color: #999999;
       padding-top: 18px;
     }}
-  </style>
+</style>
+</head>
+<body>
+<div style="max-width:640px;margin:0 auto;">
   <div class="header">
     <h1>Watchlist Monthly</h1>
     <p class="sub">{month} &middot; Monthly Check watchlist</p>
@@ -110,7 +132,8 @@ TEMPLATE = """\
     </p>
   </div>
 </div>
-</div>
+</body>
+</html>
 """
 
 
@@ -123,17 +146,18 @@ def send_newsletter(body_html: str, symbols: list[str]) -> None:
         sys.exit("GMAIL_ADDRESS / GMAIL_APP_PASSWORD are not set. See README.")
 
     month = date.today().strftime("%B %Y")
+    raw_html = TEMPLATE.format(month=month, body=body_html, symbols=", ".join(symbols))
+    # Inline every CSS rule onto its element's style="" attribute. Many mail
+    # clients (especially mobile Gmail apps) strip or ignore <style> blocks
+    # entirely regardless of placement -- inlined styles are the only thing
+    # that reliably renders everywhere.
+    inlined_html = transform(raw_html, keep_style_tags=True, remove_classes=False)
+
     msg = MIMEMultipart("alternative")
     msg["Subject"] = f"📈 Watchlist Monthly — {month}"
     msg["From"] = sender
     msg["To"] = recipient
-    msg.attach(
-        MIMEText(
-            TEMPLATE.format(month=month, body=body_html, symbols=", ".join(symbols)),
-            "html",
-            "utf-8",
-        )
-    )
+    msg.attach(MIMEText(inlined_html, "html", "utf-8"))
 
     with smtplib.SMTP_SSL("smtp.gmail.com", 465) as smtp:
         smtp.login(sender, password)
