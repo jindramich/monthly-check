@@ -78,8 +78,16 @@ def _find_watchlist_link(page, watchlist_name: str) -> str | None:
 
 
 def _extract_symbols(page) -> list[str]:
+    # Scope to the main holdings table (if Yahoo renders one) instead of the
+    # whole page, so we don't pick up unrelated /quote/ links from ads,
+    # "trending" widgets, or recommended-ticker sidebars -- and so the
+    # resulting order matches the watchlist's own row order (top to bottom)
+    # rather than whatever order stray links happen to appear on the page.
+    table = page.query_selector("table")
+    scope = table if table else page
+
     symbols = []
-    for href in page.eval_on_selector_all(
+    for href in scope.eval_on_selector_all(
         'a[href*="/quote/"]', "els => els.map(e => e.getAttribute('href'))"
     ):
         m = QUOTE_RE.search(href or "")
@@ -165,6 +173,16 @@ def fetch_watchlist_symbols() -> list[str]:
             "No tickers found in the Yahoo watchlist. Either the watchlist is "
             "empty or Yahoo changed its page structure."
         )
+
+    # Optional cap for easier end-to-end testing -- keeps the first N tickers
+    # in watchlist order. Unset YAHOO_WATCHLIST_LIMIT to cover the full list.
+    limit_raw = (os.environ.get("YAHOO_WATCHLIST_LIMIT") or "").strip()
+    if limit_raw:
+        try:
+            unique = unique[: int(limit_raw)]
+        except ValueError:
+            print(f"[warn] ignoring invalid YAHOO_WATCHLIST_LIMIT={limit_raw!r}")
+
     return unique
 
 

@@ -27,6 +27,9 @@ jobs:
         env:
           YAHOO_COOKIES: ${{ secrets.YAHOO_COOKIES }}
           YAHOO_WATCHLIST_NAME: ${{ secrets.YAHOO_WATCHLIST_NAME }}
+          # Temporary cap while testing -- covers only the first 3 tickers
+          # (in watchlist order). Remove this line to cover the full watchlist.
+          YAHOO_WATCHLIST_LIMIT: "3"
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           GMAIL_ADDRESS: ${{ secrets.GMAIL_ADDRESS }}
           GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
