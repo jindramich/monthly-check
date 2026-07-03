@@ -17,6 +17,10 @@ QUOTE_RE = re.compile(r"/quote/([A-Za-z0-9^.\-=]+)")
 # Non-ticker slugs that can appear in /quote/ links (nav, promos)
 IGNORED_SYMBOLS = {"quote"}
 
+# Only pull tickers from the one Yahoo watchlist with this name (case-insensitive).
+# Override with the YAHOO_WATCHLIST_NAME env var if your watchlist is named differently.
+DEFAULT_WATCHLIST_NAME = "monthly check"
+
 
 def _parse_cookie_header(header: str) -> list[dict]:
     cookies = []
@@ -45,6 +49,25 @@ def _goto(page, url: str) -> None:
         page.wait_for_selector('a[href*="/quote/"], a[href*="/portfolio/"]', timeout=15_000)
     except Exception:
         pass  # fall through; caller decides if the resulting page has useful links
+
+
+def _find_watchlist_link(page, watchlist_name: str) -> str | None:
+    entries = page.eval_on_selector_all(
+        'a[href*="/portfolio/"]',
+        "els => els.map(e => ({href: e.getAttribute('href'), "
+        "text: (e.textContent || '').trim()}))",
+    )
+    target = watchlist_name.strip().lower()
+
+    # Exact name match first, then fall back to a substring match in case
+    # Yahoo renders extra text (e.g. a share count) alongside the name.
+    for entry in entries:
+        if (entry.get("text") or "").strip().lower() == target:
+            return entry.get("href")
+    for entry in entries:
+        if target in (entry.get("text") or "").strip().lower():
+            return entry.get("href")
+    return None
 
 
 def _extract_symbols(page) -> list[str]:
@@ -106,25 +129,20 @@ def fetch_watchlist_symbols() -> list[str]:
                 "if this keeps happening."
             )
 
-        # Collect links to individual portfolios/watchlists, then visit each
-        # and pull the ticker symbols out of the holdings table.
-        portfolio_links = {
-            href
-            for href in page.eval_on_selector_all(
-                'a[href*="/portfolio/"]', "els => els.map(e => e.getAttribute('href'))"
+        watchlist_name = os.environ.get("YAHOO_WATCHLIST_NAME") or DEFAULT_WATCHLIST_NAME
+        link = _find_watchlist_link(page, watchlist_name)
+        if not link:
+            browser.close()
+            sys.exit(
+                f'No watchlist named "{watchlist_name}" was found on your Yahoo '
+                "portfolios page. Create a watchlist with that exact name in Yahoo "
+                "Finance, or set the YAHOO_WATCHLIST_NAME secret to match the name "
+                "you're using."
             )
-            if href and "/portfolio/" in href
-        }
 
-        symbols: list[str] = []
-        if portfolio_links:
-            for link in sorted(portfolio_links):
-                url = link if link.startswith("http") else f"https://finance.yahoo.com{link}"
-                _goto(page, url)
-                symbols.extend(_extract_symbols(page))
-        else:
-            # Fallback: some layouts render holdings directly on /portfolios
-            symbols.extend(_extract_symbols(page))
+        url = link if link.startswith("http") else f"https://finance.yahoo.com{link}"
+        _goto(page, url)
+        symbols = _extract_symbols(page)
 
         browser.close()
 

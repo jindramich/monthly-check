@@ -5,8 +5,8 @@ Monthly fundamentals check with relevant news, sent straight to email.
 Once a month a GitHub Action:
 
 1. Logs into **Yahoo Finance** with your session cookies and reads the tickers
-   from all your watchlists/portfolios (headless browser — Yahoo has no
-   official watchlist API).
+   from a single watchlist named **"monthly check"** (headless browser —
+   Yahoo has no official watchlist API).
 2. Pulls each ticker's **fundamentals** (price, P/E, market cap, dividend
    yield, 1-month price change) and the **past month's news** via yfinance.
 3. Has **Claude** write a digest: what actually mattered per stock, biggest
@@ -25,6 +25,14 @@ Actions → New repository secret):
 | `GMAIL_ADDRESS` | The Gmail address to send from (and to, unless `MAIL_TO` is set) |
 | `GMAIL_APP_PASSWORD` | Gmail app password (see below) |
 | `MAIL_TO` | *(optional)* Recipient address, defaults to `GMAIL_ADDRESS` |
+| `YAHOO_WATCHLIST_NAME` | *(optional)* Only needed if your watchlist isn't named exactly `monthly check` |
+
+### Creating the watchlist
+
+In Yahoo Finance, create a watchlist named exactly **"monthly check"** and add
+the tickers you want covered (e.g. 3 companies to start). Only tickers in that
+one watchlist are pulled in — everything else in your Yahoo account is
+ignored.
 
 ### Getting `YAHOO_COOKIES`
 
